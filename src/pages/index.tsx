@@ -284,19 +284,12 @@
 //   )
 // }
 
-
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 
 export default function NiveaPosterGenerator() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [showLogin, setShowLogin] = useState(true);
-
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(
@@ -306,59 +299,34 @@ export default function NiveaPosterGenerator() {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Check if user is already authenticated on component mount
-  useEffect(() => {
-    const authStatus = localStorage.getItem("nivea_auth");
-    if (authStatus === "authenticated") {
-      setIsAuthenticated(true);
-      setShowLogin(false);
-    }
-  }, []);
+  // --- LOGIN STATES ---
+  const [showLogin, setShowLogin] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError("");
-
-    // Check credentials
-    if (loginEmail === "admin@hivoco.com" && loginPassword === "ad#@89") {
-      setIsAuthenticated(true);
+  const handleLogin = () => {
+    if (email === "admin@hivoco.com" && password === "ad#@89") {
       setShowLogin(false);
-      localStorage.setItem("nivea_auth", "authenticated");
+      setLoginError(null);
     } else {
       setLoginError("Invalid email or password");
     }
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setShowLogin(true);
-    localStorage.removeItem("nivea_auth");
-    // Reset form states
-    setLoginEmail("");
-    setLoginPassword("");
-    setLoginError("");
-    resetUpload();
-  };
-
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith("image/")) {
         setError("Please select a valid image file");
         return;
       }
-
-      // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
         setError("File size must be less than 10MB");
         return;
       }
-
       setSelectedFile(file);
       setError(null);
-
-      // Create preview URL
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
@@ -381,7 +349,6 @@ export default function NiveaPosterGenerator() {
 
   const generateImage = async () => {
     if (!selectedFile) return;
-
     setIsLoading(true);
     setError(null);
 
@@ -389,7 +356,6 @@ export default function NiveaPosterGenerator() {
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      // Replace with your actual API endpoint
       const response = await fetch("https://node.hivoco.com/upload", {
         method: "POST",
         body: formData,
@@ -400,7 +366,7 @@ export default function NiveaPosterGenerator() {
       }
 
       const data = await response.json();
-      setGeneratedImageUrl(data.url); // Assuming API returns { s3Url: "..." }
+      setGeneratedImageUrl(data.url);
     } catch (err) {
       setError("Please upload a valid photo.");
       console.error("Error generating poster:", err);
@@ -419,80 +385,44 @@ export default function NiveaPosterGenerator() {
     }
   };
 
-  // Login Modal Component
-  const LoginModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-lg p-8 w-full max-w-md border border-gray-700">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-white mb-2">Welcome</h2>
-          <p className="text-gray-400">
-            Please login to access Nivea Poster Generator
-          </p>
-        </div>
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              value={loginEmail}
-              onChange={(e) => setLoginEmail(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter your email"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              value={loginPassword}
-              onChange={(e) => setLoginPassword(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter your password"
-              required
-            />
-          </div>
-
-          {loginError && (
-            <div className="bg-red-900/50 border border-red-700 rounded-md p-3">
-              <p className="text-red-300 text-sm">{loginError}</p>
-            </div>
-          )}
-
+  // --- LOGIN POPUP ---
+  if (showLogin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+        <div className="bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md">
+          <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full mb-4 px-4 py-3 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full mb-4 px-4 py-3 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {loginError && <p className="text-red-400 mb-4">{loginError}</p>}
           <button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition-colors"
+            onClick={handleLogin}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition"
           >
             Login
           </button>
-        </form>
+        </div>
       </div>
-    </div>
-  );
-
-  // Show login modal if not authenticated
-  if (showLogin && !isAuthenticated) {
-    return <LoginModal />;
+    );
   }
 
+  // --- HOME PAGE (after login success) ---
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Header with Logout */}
-        <div className="text-center mb-12 relative">
-          <button
-            onClick={handleLogout}
-            className="absolute top-0 right-0 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
-          >
-            Logout
-          </button>
-
+        {/* Header */}
+        <div className="text-center mb-12">
           <h1 className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             Transform Your Photo
           </h1>
