@@ -388,7 +388,18 @@ export default function NiveaPosterGenerator() {
   // --- LOGIN POPUP ---
   if (showLogin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+      <div className="min-h-screen relative flex items-center justify-center bg-gray-900 text-white">
+        <div className="flex justify-center items-center mb-3 absolute top-20">
+          {" "}
+          <Image
+            src={
+              "https://upload.wikimedia.org/wikipedia/commons/d/d3/NIVEA_logo_2021.svg"
+            }
+            alt="Preview"
+            width={80}
+            height={80}
+          />
+        </div>
         <div className="bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md">
           <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
           <input
