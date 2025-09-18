@@ -58,10 +58,10 @@ export default function NiveaPosterGenerator() {
 
     try {
       const formData = new FormData()
-      formData.append('image', selectedFile)
+      formData.append('file', selectedFile)
 
       // Replace with your actual API endpoint
-      const response = await fetch('/api/generate-poster', {
+      const response = await fetch('https://node.hivoco.com/upload', {
         method: 'POST',
         body: formData,
       })
@@ -71,9 +71,9 @@ export default function NiveaPosterGenerator() {
       }
 
       const data = await response.json()
-      setGeneratedImageUrl(data.s3Url) // Assuming API returns { s3Url: "..." }
+      setGeneratedImageUrl(data.url) // Assuming API returns { s3Url: "..." }
     } catch (err) {
-      setError('Failed to generate poster. Please try again.')
+      setError("Please upload a valid photo.");
       console.error('Error generating poster:', err)
     } finally {
       setIsLoading(false)
