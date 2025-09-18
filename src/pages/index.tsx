@@ -306,7 +306,7 @@ export default function NiveaPosterGenerator() {
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const handleLogin = () => {
-    if (email === "admin@hivoco.com" && password === "ad#@89") {
+    if (email === "admin@hivoco.com" && password === "admin") {
       setShowLogin(false);
       setLoginError(null);
     } else {
@@ -422,6 +422,18 @@ export default function NiveaPosterGenerator() {
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
+        <div className="flex justify-center items-center mb-3">
+          {" "}
+          <Image
+            src={
+              "https://upload.wikimedia.org/wikipedia/commons/d/d3/NIVEA_logo_2021.svg"
+            }
+            alt="Preview"
+            width={80}
+            height={80}
+          />
+        </div>
+
         <div className="text-center mb-12">
           <h1 className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             Transform Your Photo
@@ -434,7 +446,6 @@ export default function NiveaPosterGenerator() {
             products around it
           </p>
         </div>
-
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Upload Section */}
@@ -590,7 +601,6 @@ export default function NiveaPosterGenerator() {
             )}
           </div>
         </div>
-
         {/* Features */}
         <div className="mt-16 text-center">
           <h3 className="text-xl font-semibold mb-6 text-gray-300">
