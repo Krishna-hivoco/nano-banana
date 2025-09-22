@@ -19,7 +19,7 @@
 //         setError('Please select a valid image file')
 //         return
 //       }
-      
+
 //       // Validate file size (max 10MB)
 //       if (file.size > 10 * 1024 * 1024) {
 //         setError('File size must be less than 10MB')
@@ -28,7 +28,7 @@
 
 //       setSelectedFile(file)
 //       setError(null)
-      
+
 //       // Create preview URL
 //       const url = URL.createObjectURL(file)
 //       setPreviewUrl(url)
@@ -111,7 +111,7 @@
 //           {/* Upload Section */}
 //           <div className="space-y-6">
 //             <h2 className="text-2xl font-semibold mb-4">Upload Your Image</h2>
-            
+
 //             {/* File Upload Area */}
 //             <div
 //               onDrop={handleDrop}
@@ -129,7 +129,7 @@
 //                 onChange={handleFileSelect}
 //                 className="hidden"
 //               />
-              
+
 //               {previewUrl ? (
 //                 <div className="space-y-4">
 //                   <div className="relative w-full h-64 mx-auto">
@@ -211,7 +211,7 @@
 //           {/* Result Section */}
 //           <div className="space-y-6">
 //             <h2 className="text-2xl font-semibold mb-4">Your Nivea Poster</h2>
-            
+
 //             <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-8 h-96 flex items-center justify-center">
 //               {generatedImageUrl ? (
 //                 <div className="relative w-full h-full">
@@ -286,7 +286,7 @@
 
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 
 export default function NiveaPosterGenerator() {
@@ -299,6 +299,8 @@ export default function NiveaPosterGenerator() {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
+  const [inputValue, setInputValue] = useState("singing");
   // --- LOGIN STATES ---
   const [showLogin, setShowLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -355,6 +357,7 @@ export default function NiveaPosterGenerator() {
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
+      formData.append("user_input", inputValue);
 
       const response = await fetch("https://node.hivoco.com/upload", {
         method: "POST",
@@ -384,6 +387,57 @@ export default function NiveaPosterGenerator() {
       fileInputRef.current.value = "";
     }
   };
+
+  const placeholders = [
+    "what would you be good at",
+    "e.g, i love sleeping",
+    "e.g, i love singing",
+    "e.g i like to dance",
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentPlaceholder((prev) => (prev + 1) % placeholders.length);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+
+async function downloadS3Image(
+  s3Url: string,
+  filename?: string
+): Promise<void> {
+  try {
+    // Fetch the image
+    const response = await fetch(s3Url);
+
+    if (!response.ok) {
+      throw new Error(`Failed to download: ${response.status}`);
+    }
+
+    // Get the image as blob
+    const blob = await response.blob();
+
+    // Create download filename
+    const downloadFilename =
+      filename || s3Url.split("/").pop() || "download.jpg";
+
+    // Create temporary URL and trigger download
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = downloadFilename;
+    link.click();
+
+    // Cleanup
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Download failed:", error);
+    throw error;
+  }
+}
+
 
   // --- LOGIN POPUP ---
   if (showLogin) {
@@ -462,7 +516,34 @@ export default function NiveaPosterGenerator() {
           {/* Upload Section */}
           <div className="space-y-6">
             <h2 className="text-2xl font-semibold mb-4">Upload Your Image</h2>
-
+            <div className="relative">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-600 hover:border-gray-500 bg-gray-800/50 rounded-lg focus:border-indigo-500 focus:outline-none transition-colors duration-200 text-gray-300"
+              />
+              {/* Custom animated placeholder */}
+              {!inputValue && (
+                <div className="absolute left-4 top-3 pointer-events-none overflow-hidden h-6">
+                  <div
+                    className="transition-transform duration-300 ease-in-out"
+                    style={{
+                      transform: `translateY(-${currentPlaceholder * 24}px)`,
+                    }}
+                  >
+                    {placeholders.map((placeholder, index) => (
+                      <div
+                        key={index}
+                        className="text-gray-400 h-6 flex items-center whitespace-nowrap"
+                      >
+                        {placeholder}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             {/* File Upload Area */}
             <div
               onDrop={handleDrop}
@@ -595,13 +676,13 @@ export default function NiveaPosterGenerator() {
 
             {generatedImageUrl && (
               <div className="flex flex-col sm:flex-row gap-3">
-                <a
-                  href={generatedImageUrl}
-                  download="nivea-poster.jpg"
+                <button
+                  onClick={() => downloadS3Image(generatedImageUrl)}
+                  // download="nivea-poster.jpg"
                   className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-medium text-center transition-colors"
                 >
                   Download Poster
-                </a>
+                </button>
                 <button
                   onClick={resetUpload}
                   className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-6 rounded-lg font-medium transition-colors"
