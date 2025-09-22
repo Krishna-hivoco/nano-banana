@@ -300,7 +300,7 @@ export default function NiveaPosterGenerator() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
-  const [inputValue, setInputValue] = useState("singing");
+  const [inputValue, setInputValue] = useState("");
   // --- LOGIN STATES ---
   const [showLogin, setShowLogin] = useState(true);
   const [email, setEmail] = useState("");
